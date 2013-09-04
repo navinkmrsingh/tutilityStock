@@ -39,7 +39,7 @@ public class BseScraper {
 						Element smbl = code.nextElementSibling();					
 						
 						if(smbl != null){
-							int scripId = Integer.parseInt(smbl.html().toString());
+							String scripId = smbl.html().toString();
 							System.out.println("Company: " + company.html());
 							System.out.println("BSE code: " + code.html());
 							System.out.println("BSE symbol: " + smbl.html());

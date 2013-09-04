@@ -3,7 +3,7 @@ package stock.tutility.db.beans;
 public class ScripsBse {
 
 	private int id;	
-	private int scripId;
+	private String scripId;
 	private String companyName;
 	private String bseCode;
 	private int eodStatus;
@@ -14,10 +14,10 @@ public class ScripsBse {
 	public void setId(int id) {
 		this.id = id;
 	}
-	public int getScripId() {
+	public String getScripId() {
 		return scripId;
 	}
-	public void setScripId(int scripId) {
+	public void setScripId(String scripId) {
 		this.scripId = scripId;
 	}
 	public String getCompanyName() {

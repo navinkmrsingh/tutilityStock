@@ -137,7 +137,7 @@ public class EodBseManager {
 						Statement.RETURN_GENERATED_KEYS);
 				) {
 			
-			stmt.setInt(1, bean.getScripId());
+			stmt.setString(1, bean.getScripId());
 			stmt.setDate(2, (Date) bean.getDate());
 			stmt.setBigDecimal(3, bean.getOpen());
 			stmt.setBigDecimal(4, bean.getHigh());

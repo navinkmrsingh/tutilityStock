@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class EodBse {
 
-	private int scripId;
+	private String scripId;
 	private Date date;
 	private BigDecimal open;
 	private BigDecimal high;
@@ -13,11 +13,11 @@ public class EodBse {
 	private BigDecimal close;
 	private long volume;
 	private BigDecimal adjClose;
-	public int getScripId() {
+	public String getScripId() {
 		return scripId;
 	}
-	public void setScripId(int scripId) {
-		this.scripId = scripId;
+	public void setScripId(String scripId2) {
+		this.scripId = scripId2;
 	}
 	public Date getDate() {
 		return date;

@@ -1,9 +1,6 @@
-
-
-
 import stock.tutility.db.ConnectionManager;
 import stock.tutility.db.DBtype;
-import stock.tutility.db.tables.EodBseManager;
+import stock.tutility.db.scrapers.BseEodScraper;
 
 public class Main {
 	
@@ -24,14 +21,14 @@ public class Main {
 //		NseScraper.scrapeNseSymbols(dbType);
 //		BseEodScraper.scrapeBseEod(dbType, 12132, "SBI");
 		
-//		BseEodScraper.downloadBseEod(dbType);
+		BseEodScraper.downloadBseEod(dbType);
 //		BseEodScraper.copyMultiEod4mHql(dbType);
 		
-		String selectCondition = " WHERE scripId=526443";
+		String selectCondition = " WHERE scripId=533389 AND date='2013-08-08'";
 
 //		ScripsBseManager.displayAllRows();
 //		ScripsNseManager.displayAllRows();
-		EodBseManager.displayAllRows(selectCondition);
+//		EodBseManager.displayAllRows(selectCondition);
 		
 //		EodBseManager.addIndex(dbType);
 		

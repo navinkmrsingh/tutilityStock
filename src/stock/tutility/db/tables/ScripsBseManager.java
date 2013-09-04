@@ -126,7 +126,7 @@ public class ScripsBseManager {
 						Statement.RETURN_GENERATED_KEYS);
 				) {
 			
-			stmt.setInt(1, bean.getScripId());
+			stmt.setString(1, bean.getScripId());
 			stmt.setString(2, bean.getCompanyName());
 			stmt.setString(3, bean.getBseCode());
 			int affected = stmt.executeUpdate();
@@ -134,7 +134,7 @@ public class ScripsBseManager {
 			if (affected != 0) {
 				keys = stmt.getGeneratedKeys();
 				keys.next();
-				int newKey = keys.getInt(1);
+				String newKey = ""+keys.getInt(1);
 				bean.setScripId(newKey);
 			} else {
 				System.err.println("No rows affected");
@@ -149,11 +149,11 @@ public class ScripsBseManager {
 		return true;
 	}
 	
-	public static boolean updateEodStatus(int scripId) throws Exception {		
+	public static boolean updateEodStatus(String scripId) throws Exception {		
 
 		String sql = "UPDATE " + TABLE_NAME + 
 				" SET eodStatus=1" +
-				" WHERE scripId="+scripId;
+				" WHERE scripId='"+scripId+"'";
 		ResultSet keys = null;
 		
 		try (

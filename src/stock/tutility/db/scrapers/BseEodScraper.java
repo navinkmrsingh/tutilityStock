@@ -29,16 +29,22 @@ public class BseEodScraper {
 	private static Connection conn = ConnectionManager.getInstance().getConnection();
 	private static final String SCRIPS_TABLE_NAME = "tsScripsBse";
 	
-	public static boolean scrapeBseEod(DBtype dbType, int scripId, String scripCode) throws SQLException, ParseException {
+	public static boolean scrapeBseEod(DBtype dbType, String scripId, String yahooCode) throws SQLException, ParseException {
 
 		Statement stmt = null;
-		ResultSet rs = null;		
-
+		ResultSet rs = null;
+		String scripUrl = "";
+		if(yahooCode.equals("^BSESN")){
+			scripUrl = "%255EBSESN";
+		}else{
+			scripUrl = yahooCode + ".BO";
+		}
+			
 		try {
 //				File input = new File("files/sbiEod1.xml");
 //				Document doc = Jsoup.parse(input, "UTF-8", "");
 			
-			String url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'http%3A%2F%2Fichart.finance.yahoo.com%2Ftable.csv%3Fs%3D"+scripCode+".BO%26d%3D"+7+"%26e%3D"+24+"%26f%3D2013%26g%3Dd%26a%3D0%26b%3D3%26c%3D1900%26ignore%3D.csv'";
+			String url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'http%3A%2F%2Fichart.finance.yahoo.com%2Ftable.csv%3Fs%3D"+scripUrl+"%26d%3D"+7+"%26e%3D"+26+"%26f%3D"+2013+"%26g%3Dd%26a%3D"+7+"%26b%3D"+26+"%26c%3D"+1900+"%26ignore%3D.csv'";
 			Document doc = Jsoup.connect(url).get();
 			Elements results = doc.select("results");
 			Elements rows = results.select("row");
@@ -160,14 +166,14 @@ public class BseEodScraper {
 				Statement stmt = conn.createStatement();
 				ResultSet rs = stmt.executeQuery(sql);
 				){
-
+			
 			int count = 0;
 			while (rs.next()) {
 				int id = rs.getInt("id");
-				int scripId = rs.getInt("scripId");
-				String bseCode = rs.getString("bseCode");
+				String scripId = rs.getString("scripId");
+				String yahooCode = rs.getString("bseCode");
 				try {
-					boolean affected = scrapeBseEod(dbType, scripId, bseCode);
+					boolean affected = scrapeBseEod(dbType, scripId, yahooCode);
 					if(affected){
 						try {
 							ScripsBseManager.updateEodStatus(scripId);
@@ -226,7 +232,7 @@ public class BseEodScraper {
 			in = new BufferedReader(new FileReader("files/hSqlBseEodData5.txt"));
 			int count = 0;
 			String sql = "";
-			String sq = "INSERT INTO `tseodbse` (`scripId`, `date`, `open`, `high`, `low`, `close`, `volume`, `adjClose`) VALUES";
+			String sq = "INSERT INTO `tseodbse` (`scripId`, `date`, `open`, `high`, `low`, `close`, `volume`, `adjClose`) VALUES	";
 			String l = "";
 			
 			try {

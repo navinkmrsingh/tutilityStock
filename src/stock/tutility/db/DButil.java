@@ -95,13 +95,28 @@ public class DButil {
 		
 	}
 	
-	public static void runSql(DBtype dbType, String sql, Connection conn) {
+	public static void runSqlUpdate(DBtype dbType, String sql, Connection conn) {
 		
 		try (
 				//Connection conn = DButil.getConnection(dbType);
 				Statement stmt = conn.createStatement();				
 				){
 			stmt.executeUpdate(sql);
+			System.out.println("Query ran successfully!");
+			
+		}catch (SQLException e) {
+			System.err.println(e);			
+		}
+		
+	}
+	
+	public static void runSqlQuery(DBtype dbType, String sql, Connection conn) {
+		
+		try (
+				//Connection conn = DButil.getConnection(dbType);
+				Statement stmt = conn.createStatement();				
+				){
+			stmt.executeQuery(sql);
 			System.out.println("Query ran successfully!");
 			
 		}catch (SQLException e) {

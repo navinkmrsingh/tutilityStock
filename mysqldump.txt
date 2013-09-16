@@ -1,0 +1,1 @@
+mysqldump -unavin -p tutilitystock > "c:\bckup\tutilitystock.sql"

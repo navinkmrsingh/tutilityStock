@@ -1,6 +1,7 @@
 package stock.tutility.db.scrapers;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -29,6 +31,9 @@ public class BseEodScraper {
 	private static Connection conn = ConnectionManager.getInstance().getConnection();
 	private static final String SCRIPS_TABLE_NAME = "tsScripsBse";
 	
+	/**
+	 * Scrapes BSE EODs from yahoo REST api in XML format for a given SCRIP
+	 */
 	public static boolean scrapeBseEod(DBtype dbType, String scripId, String yahooCode) throws SQLException, ParseException {
 
 		Statement stmt = null;
@@ -160,6 +165,9 @@ public class BseEodScraper {
 		return true;	
 	}
 
+	/**
+	 * Calls scrapeBseEod() one by one for each SCRIP  
+	 */
 	public static void downloadBseEod(DBtype dbType){
 		String sql = "SELECT id, scripId, bseCode, eodStatus FROM " + SCRIPS_TABLE_NAME + " WHERE eodStatus=0";
 		try (				
@@ -197,6 +205,11 @@ public class BseEodScraper {
 		} 
 	}
 	
+	/**
+	 * Copies & Inserts EODs from HSQLdb to MySql one-by-one
+	 * @param dbType
+	 * @throws IOException
+	 */
 	public static void copyEod4mHql(DBtype dbType) throws IOException{
 		BufferedReader in;
 		try {
@@ -207,7 +220,7 @@ public class BseEodScraper {
 				while (in.ready()) {
 				  String sql = in.readLine();
 				  count++;
-				  DButil.runSql(dbType, sql, conn);
+				  DButil.runSqlUpdate(dbType, sql, conn);
 //				  System.out.println(sql);
 				  System.out.println(count);
 				}
@@ -226,6 +239,11 @@ public class BseEodScraper {
 		
 	}
 	
+	/**
+	 * Copies  & Inserts EODs from HSQLdb to MySql 1000 at a time
+	 * @param dbType
+	 * @throws IOException
+	 */
 	public static void copyMultiEod4mHql(DBtype dbType) throws IOException{
 		BufferedReader in;
 		try {
@@ -245,12 +263,12 @@ public class BseEodScraper {
 				  insert = insert.replace(")", "),");
 				  l+= insert;
 				  if(count%1000 == 0){
-					  copyMultiEod4mHqlExecSql(dbType, sql, sq, l);
+					  multiEodExecSql(dbType, sql, sq, l);
 					  l = "";
 				  }					  
 				  System.out.println(count);
 				}
-				copyMultiEod4mHqlExecSql(dbType, sql, sq, l);
+				multiEodExecSql(dbType, sql, sq, l);
 				
 				System.out.println("Total # of lines: " + count); 
 			} catch (IOException e) {
@@ -267,10 +285,122 @@ public class BseEodScraper {
 		
 	}
 	
-	public static void copyMultiEod4mHqlExecSql (DBtype dbType, String sql, String sq, String l) {
-		sql = sq+l;
-		sql = sql.substring(0, sql.length()-1);
-		DButil.runSql(dbType, sql, conn);		
-//		System.out.println(sql);
+	private static void multiEodExecSql (DBtype dbType, String sql, String sq, String l) {
+		if(l != ""){
+			sql = sq+l;
+			sql = sql.substring(0, sql.length()-1);
+			DButil.runSqlUpdate(dbType, sql, conn);
+			System.out.println(sql);
+		}
+		
+	}
+
+	/**
+	 * Scrapes BSE EODs from GetBhavCopy files and Inserts into MySql
+	 * @throws IOException 
+	 */
+	private static void scrapeBseEodGbc(DBtype dbType, String fileUrl, String fileName) throws IOException{
+		
+//		String fileUrl = "files/getBhav/bse/" + fileName + ".txt";
+		BufferedReader in;
+		String date = fileName.replace("-BSE-EQ", "");
+		String sql = "";
+		String sq = "INSERT INTO `tsEodBse` (`scripId`, `date`, `open`, `high`, `low`, `close`, `volume`, `adjClose`) VALUES";
+		String l = "";
+		
+		String[] sectors = {"AUTO", "BANKEX", "CONSDURBL", "FMCG", "HLTHCARE", "IT", "METAL", "OILGAS", "TECK", 
+							"CAPGOODS", "POWER", "PSU", "REALTY", "DOL-30", "DOL-100", "DOL-200"};
+		ArrayList<String> sectorsArList = new ArrayList<String>();
+		sectorsArList.addAll(Arrays.asList(sectors));
+		
+//		String[] scrips2 = {"CAPGOODS", "POWER", "PSU", "REALTY", "DOL-30", "DOL-100", "DOL-200"};		
+//		ArrayList<String> scrips2ArList = new ArrayList<String>();
+//		scrips2ArList.addAll(Arrays.asList(scrips2));
+		
+		
+		try {
+			in = new BufferedReader(new FileReader(fileUrl));
+			int count = 0;
+			
+			try {
+				while (in.ready()) {
+				  String line = in.readLine();				  
+				  String[] parts = line.split(",");				  
+				  
+				  if((!line.isEmpty()) && (!parts[0].equals("<ticker>")) /* && scripsArList.contains(parts[0])*/){
+					  count++;
+					  
+					  String scripId = parts[0];
+					  String open = parts[2];
+					  String high = parts[3];
+					  String low = parts[4];
+					  String close = parts[5];
+					  String volume = parts[6];
+					  String adjClose = parts[5];
+					  
+					  l+= "('" + scripId + "','" + date + "'," + open + "," + high + "," + low + "," + close + "," + volume + "," + adjClose + "),";					 
+					  
+					  if(count%1000 == 0){
+						  multiEodExecSql(dbType, sql, sq, l);
+						  l = "";
+					  }
+					  
+//					  System.out.println(line);
+//					  System.out.println(count);
+//					  System.out.println("open:"+ open);
+//					  System.out.println("Array Length: "+parts.length);					  
+				  }				  
+				}
+				multiEodExecSql(dbType, sql, sq, l);
+				
+//				if(l != ""){
+//					l = l.substring(0, l.length()-1);
+//				}				
+//				sql = sq + l;
+//				DButil.runSql(dbType, sql, conn);
+				
+				System.out.println("Date: " + date);
+				System.out.println("Total # of lines: " + count);
+//				System.out.println(sql);
+//				System.out.println("-------------------------------------------------------------------");
+			} catch (IOException e) {
+				System.err.println(e);
+			}finally{
+				if(in!=null){
+					in.close();
+				}
+			}			
+			
+		} catch (FileNotFoundException e) {
+			System.err.println(e);
+		}
+		
+	}
+
+	/**
+	 * Calls scrapeBseEodGbc() for each file in GBC/BSE folder
+	 * @throws IOException 
+	 */
+	public static void scrapeBseEodGbcAllFiles(DBtype dbType) throws IOException {
+		String fileDir = "files/getBhav/bse/";
+		File folder = new File(fileDir);
+		File[] listOfFiles = folder.listFiles();
+
+	    for (int i = 0; i < listOfFiles.length; i++) {
+	      if (listOfFiles[i].isFile()) {
+	    	  String fileFullName = listOfFiles[i].getName();
+	    	  String fileName = fileFullName.replace(".txt", "");
+	    	  String fileUrl = fileDir + fileFullName;
+	    	  scrapeBseEodGbc(dbType, fileUrl, fileName);
+	    	  
+	    	  System.out.println("File: " + fileName);
+	    	  System.out.println("File Url:" + fileUrl);	    	 
+	      } else if (listOfFiles[i].isDirectory()) {
+	    	  System.out.println("Directory: " + listOfFiles[i].getName());
+	      }
+	      System.out.println("-------------------------------------------------------------------");
+	    }
+	    System.out.println("Number of Files: "+ listOfFiles.length);
+	    
 	}
 }

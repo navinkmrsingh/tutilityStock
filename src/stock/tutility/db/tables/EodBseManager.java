@@ -29,7 +29,7 @@ public class EodBseManager {
 		switch (dbType) {
 		case MYSQL:
 			sql = "CREATE TABLE IF NOT EXISTS `"+TABLE_NAME+ "` ("+
-					"`scripId` int(6) NOT NULL, " +
+					"`scripId` char(20) NOT NULL," +
 					"`date` date NOT NULL, " +
 					"`open` decimal(11,2) DEFAULT NULL, " +
 					"`high` decimal(11,2) DEFAULT NULL, " +
@@ -102,7 +102,7 @@ public class EodBseManager {
 			System.out.println("BSE EOD Table:");
 			while (rs.next()) {
 				StringBuffer bf = new StringBuffer();
-				bf.append(rs.getInt("scripId") + ": ");
+				bf.append(rs.getString("scripId") + ": ");
 				bf.append(rs.getString("date") +", ");
 				bf.append(rs.getString("open") +", ");
 				bf.append(rs.getString("high") +", ");
@@ -124,6 +124,27 @@ public class EodBseManager {
 			return false;
 		} 
 		return true;
+	}
+	
+	public static boolean countAllRows(DBtype dbType) {
+		String sql = "SELECT COUNT(*) FROM " + TABLE_NAME;
+		
+		try (				
+				Statement stmt = conn.createStatement();
+				ResultSet rs = stmt.executeQuery(sql);
+				){
+			while (rs.next()){
+				System.out.println("Counted! " + rs.getInt(1) + " rows");
+			}
+			
+			
+		}
+		catch (SQLException e) {
+			System.err.println(e);
+			return false;
+		} 
+		return true;
+		
 	}
 	
 	public static boolean insert(EodBse bean) throws Exception {
